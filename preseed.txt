@@ -1,0 +1,364 @@
+## Lliurex preseed for Lliurex Client 21 with UEFI
+## NOTE: Change SUPERPASSWORD to your prefered passwd
+## 	 Change MIRROR_ADDRESS to your server mirror address
+
+
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+
+#
+# SEE LOG WITH DEBCONF_DEBUG=5 into initrd /var/lib/preseed/log
+#
+######
+##### UNATTENDED
+# LMD Created user account
+# Partman configuration
+
+
+### Simple GPT configuration w/o LVM
+## Based on: https://github.com/nuada/ubuntu-preseed
+d-i partman/alignment string cylinder
+d-i partman/confirm_write_new_label boolean true
+d-i partman-basicfilesystems/choose_label string gpt
+d-i partman-basicfilesystems/default_label string gpt
+d-i partman-partitioning/choose_label string gpt
+d-i partman-partitioning/default_label string gpt
+d-i partman/choose_label string gpt
+d-i partman/default_label string gpt
+
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select gpt-boot-root-swap
+d-i partman-auto/expert_recipe string         \
+   gpt-boot-root-swap ::                      \
+      1 1 1 free                              \
+         $bios_boot{ }                        \
+         method{ biosgrub } .                 \
+      200 200 200 fat32                       \
+         $primary{ }                          \
+         method{ efi } format{ } .            \
+      512 512 512 ext3                        \
+         $primary{ } $bootable{ }             \
+         method{ format } format{ }           \
+         use_filesystem{ } filesystem{ ext3 } \
+         mountpoint{ /boot } .                \
+      1000 20000 -1 ext4                      \
+         $primary{ }                          \
+         method{ format } format{ }           \
+         use_filesystem{ } filesystem{ ext4 } \
+         mountpoint{ / } .                    \
+      65536 65536 65536 linux-swap            \
+         $primary{ }                          \
+         method{ swap } format{ } .
+
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+
+
+#######
+#### lliurex-all.cfg
+#######
+#_preseed_V1
+
+#
+# COMMON PROGRAM OPTIONS
+#
+
+## ACROREAD
+acroread acroread/default-viewer boolean true
+acroread-common acroread-common/default-viewer boolean true
+# AUTO_GEN is set to "n" in /etc/nbd-client
+# /dev entry for this nbd-client (number: )?
+# Ignore this note about setting up a Kerberos realm when installing the package.
+#### JAVA
+#### KERBEROS
+krb5-admin-server krb5-admin-server/newrealm note ignore
+#### LDAP-AUTH-CONFIG
+ldap-auth-config ldap-auth-config/dblogin boolean false
+ldap-auth-config ldap-auth-config/dbrootlogin boolean true
+ldap-auth-config ldap-auth-config/ldapns/base-dn string dc=lliurex,dc=net
+ldap-auth-config ldap-auth-config/ldapns/ldap-server string ldap://127.0.0.1/
+ldap-auth-config ldap-auth-config/ldapns/ldap_version select 3
+
+
+ldap-auth-config ldap-auth-config/override boolean false
+ldap-auth-config ldap-auth-config/rootbinddn string cn=lliurex,dc=lliurex,dc=net
+ldap-auth-config ldap-auth-config/rootbindpw password lliurex
+lliurex-statistics lliurex-statistics/unattended boolean true
+
+nbd-client nbd-client/device string 
+nbd-client nbd-client/extra string 
+nbd-client nbd-client/host string 
+nbd-client nbd-client/killall boolean false
+nbd-client nbd-client/no-auto-config string faked_error
+nbd-client nbd-client/number string 0
+nbd-client nbd-client/port string 
+nbd-client nbd-client/type select raw
+# Number of nbd-client connections to use:
+oracle-java6-installer shared/accepted-oracle-license-v1-1 boolean true
+oracle-java7-installer shared/accepted-oracle-license-v1-1 boolean true
+oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true
+# PRESEED FOR LLIUREX-STATISTICS
+# PRESEED FOR LTSP
+# Settings for LDAP authentication
+# Settings for Moodle
+sun-java5-bin shared/accepted-sun-dlj-v1-1 boolean true
+sun-java5-jdk shared/accepted-sun-dlj-v1-1 boolean true
+sun-java5-jre shared/accepted-sun-dlj-v1-1 boolean true
+sun-java6-bin shared/accepted-sun-dlj-v1-1 boolean true
+sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true
+sun-java6-jre shared/accepted-sun-dlj-v1-1 boolean true
+# TTF Mscorefonts
+ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true
+ttf-mscorefonts-installer msttcorefonts/baddldir string faked_error
+ttf-mscorefonts-installer msttcorefonts/dldir string
+ttf-mscorefonts-installer msttcorefonts/dlurl string
+ttf-mscorefonts-installer msttcorefonts/error-mscorefonts-eula string faked_error
+ttf-mscorefonts-installer msttcorefonts/http_proxy string
+ttf-mscorefonts-installer msttcorefonts/present-mscorefonts-eula note
+ttf-mscorefonts-installer msttcorefonts/savedir string
+# TIMEZONE
+tzdata tzdata/Zones/Etc select GMT+1
+tzdata tzdata/Areas select Europe
+encfs encfs/security-information string faked_error
+
+####
+## END lliurex-all.cfg
+####
+
+
+# Base Config
+base-config apt-setup/security-updates boolean false
+base-installer base-installer/kernel/headers boolean true
+base-installer base-installer/kernel/image select linux-generic-lts-focal
+base-installer base-installer/kernel/override-image string linux-generic-lts-focal
+base-installer base-installer/kernel/skip-install boolean false
+base-installer base-installer/no_target_mounted string faked_error
+base-installer base-installer/unclean_target_cancel string faked_error
+base-installer base-installer/use_unclean_target boolean true
+# d-i apt-setup
+d-i apt-setup/multiarch string ""
+d-i apt-setup/backports boolean false
+d-i apt-setup/security_host string MIRROR_ADDRESS
+d-i apt-setup/security_path string /mirror/llx21
+d-i apt-setup/security-updates boolean false
+d-i apt-setup/services-select multiselect security
+d-i apt-setup/source boolean false
+d-i base-installer/kernel/image select linux-generic-lts-focal
+d-i base-installer/kernel/override-image string linux-generic-lts-focal
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string ntp.ubuntu.com
+d-i clock-setup/utc boolean true
+d-i debconf/language string ca_ES:
+d-i debian-installer/add-kernel-opts string
+d-i debian-installer/allow_unauthenticated boolean true
+d-i debian-installer/allow_unauthenticated boolean true
+d-i debian-installer/allow_unauthenticated boolean true
+d-i debian-installer/allow_unauthenticated_ssl boolean false
+d-i debian-installer/consoledisplay string
+d-i debian-installer/country string ES
+d-i debian-installer/dummy string
+d-i debian-installer/exit/always_halt boolean false
+d-i debian-installer/exit/halt boolean false
+d-i debian-installer/exit/halt boolean true
+d-i debian-installer/exit/poweroff boolean false
+d-i debian-installer/exit/poweroff boolean true
+d-i debian-installer/framebuffer boolean true
+d-i debian-installer/ignore-release-gpg boolean true
+d-i debian-installer/language string ca_ES:
+d-i debian-installer/locale select ca_ES.UTF-8
+d-i debian-installer/locale select ca_ES.UTF-8
+d-i debian-installer/main-menu/item-failure string faked_error
+d-i debian-installer/main-menu select Terminar la instalación
+d-i debian-installer/missing-provide select ${DEFAULT}
+d-i debian-installer/shell-plugin string faked_terminal
+d-i debian-installer erminal-plugin-unavailable string faked_error
+d-i debian-installer heme string
+d-i keyboard-configuration/layoutcode string ca
+d-i keyboard-configuration/layoutcode string ca
+d-i keyboard-configuration/layout select Spanish
+d-i keyboard-configuration/modelcode string pc105
+d-i keyboard-configuration/variantcode select cat
+d-i keyboard-configuration/variant select Spanish - Catalan (Spain, with middle-dot L)
+d-i keyboard-configuration/xkb-keymap select es
+d-i localechooser/countrylist/Europe select ES
+d-i localechooser/languagelist select es
+
+d-i mirror/country string manual
+d-i mirror/http/directory string /mirror/llx21
+d-i mirror/http/hostname string MIRROR_ADDRESS
+d-i mirror/http/proxy string
+d-i pkgsel/update-policy select none
+d-i pkgsel/upgrade select none
+
+
+d-i preseed/late_command string \
+# Configuracio teclat
+ in-target sh -c 'sed -i "s/XKBMODEL=\"[a-z]*\"/XKBMODEL=\"pc105\"/g" /etc/default/keyboard' ; \
+ in-target sh -c 'sed -i "s/XKBLAYOUT=\"[a-z]*\"/XKBLAYOUT=\"es\"/g" /etc/default/keyboard' ; \
+ in-target sh -c 'sed -i "s/XKBVARIANT=\"[a-z]*\"/XKBVARIANT=\"\"/g" /etc/default/keyboard' ; \
+ in-target sh -c 'sed -i "s/XKBOPTIONS=\"[a-z]*\"/XKBOPTIONS=\"\"/g" /etc/default/keyboard' ; \
+ 
+ in-target sh -c 'wget -O /d-i-late-command http://MIRROR_ADDRESS/preseed/d-i-late-command' \
+ in-target sh -c 'chmod +x /d-i-late-command' ; \
+ in-target sh -c '/d-i-late-command /target' ; \
+ in-target sh -c 'cp -r /boot/efi/EFI/neon /boot/efi/EFI/ubuntu'; \
+ in-target sh -c 'busybox poweroff' ;
+
+
+
+d-i time/zone string Europe/Madrid
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+#Final command
+
+
+
+# TASKEL
+tasksel tasksel/first multiselect none
+#d-i debconf/language string es
+#d-i debian-installer/consoledisplay string console-setup
+#d-i debian-installer/country string ES
+#d-i debian-installer/locale string es_ES.UTF-8
+#d-i debian-installer/language string es_ES
+#d-i localechooser/languagelist string es
+#d-i keyboard-configuration/layout string es
+#d-i keyboard-configuration/other string es
+#d-i keyboard-configuration/model string es
+#d-i keyboard-configuration/variant string es
+#d-i keyboard-configuration/xkb-keymap string es
+#d-i keyboard-configuration oggle string es
+#d-i keyboard-configuration/altgr string es
+#d-i keyboard-configuration/compose string es
+#d-i keyboard-configuration/modelcode string es
+#d-i keyboard-configuration/layoutcode string es
+#d-i keyboard-configuration/variantcode string es
+#d-i keyboard-configuration/optionscode string es
+#d-i keyboard-configuration/store_defaults_in_debconf_db string es
+#d-i oem-config/enable boolean false
+
+
+
+
+
+# Normal user name
+d-i passwd/user-fullname string lliurex-admin
+d-i passwd/username string lliurex-admin
+# Normal user's password, either in clear text
+d-i passwd/user-password password SUPERPASSWORD
+d-i passwd/user-password-again password SUPERPASSWORD
+d-i passwd/root-password password SUPERPASSWORD
+d-i passwd/root-password-again password SUPERPASSWORD
+# Normal user's password encrypted using an MD5 hash.
+#d-i passwd/user-password-crypted password $6$rnsnbPeliX8J1zqV$hzcyRIJ.lrA2xsornm3TW4XR6eD8g/kmDfXZvy/FwOa7uT9afcNfmAlefcyoEN36OkT4CusNFeGWsus6.PRgR1
+#d-i passwd/root-password-crypted password $6$8AndZYXtLir4nLhj$NkZIy3LEcuQRRNct9c1dS2c36vXJUEyzDDyHC/VitAVyRWAtCnVJx/35FMi6Go1nJy0xQzuef/WZ4Sftz/HXF.
+d-i user-setup/allow-password-weak boolean true
+
+
+#### CLIENT
+nslcd   nslcd/ldap-uris string  ldap://server/
+nslcd   nslcd/ldap-base string  dc=lliurex,dc=net
+
+ldap-auth-config ldap-auth-config/ldapns/ldap-server string ldap://server/
+libnss-ldapd    libnss-ldapd/nsswitch   multiselect     passwd,group,shadow
+
+d-i pkgsel/include string lliurex-meta-client
+
+
+
+
+# Configuración de localización para el idioma y país.
+d-i debian-installer/locale string ca_ES.UTF-8 
+d-i debian-installer/language string es
+d-i debian-installer/country string ES
+
+# Locale predeterminat del sistema:
+d-i locales/default_environment_locale	select  ca_ES.UTF-8
+# Locales a generar:
+d-i locales/locales_to_be_generated multiselect	ca_ES.UTF-8 UTF-8
+
+# Detect keyboard layout?
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string es
+d-i console-setup/variantcode string cat
+
+# Voleu mantenir les opcions del teclat actuals al fitxer de configuració?
+d-i keyboard-configuration/unsupported_config_options	boolean	true
+
+# for internal use
+d-i keyboard-configuration/modelcode	string	pc105
+d-i keyboard-configuration/layoutcode	string	es
+d-i keyboard-configuration/layout	select	Spanish
+d-i keyboard-configuration/variantcode	string	cat
+d-i keyboard-configuration/xkb-keymap select es
+
+# Voleu emprar Control+Alt+Retrocés per a terminar el servidor X?
+d-i keyboard-configuration/ctrl_alt_bksp	boolean	false
+# Disposició del teclat:
+d-i keyboard-configuration/variant	select	Spanish - Catalan (Spain, with middle-dot L)
+# Choices: Fixació de majúscules
+d-i keyboard-configuration/toggle	select	No toggling
+# Voleu mantindre la disposició del teclat actual al fitxer de configuració?
+d-i keyboard-configuration/unsupported_config_layout	boolean	true
+# Voleu mantenir la disposició del teclat predeterminada ()?
+d-i keyboard-configuration/unsupported_layout	boolean	true
+# Mètode per a commutar temporalment entre l'entrada nacional i llatina:
+d-i keyboard-configuration/switch	select	No temporary switch
+# Voleu mantenir les opcions del teclat predeterminades ()?
+d-i keyboard-configuration/unsupported_options	boolean	true
+
+
+# Voleu finalitzar la conversió al GRUB 2 ara?
+grub-pc	grub-pc/mixed_legacy_and_grub2	boolean	true
+# Choices: 
+grub-pc	grub-pc/install_devices_disks_changed	multiselect
+# Línia d'ordres de kFreeBSD per defecte:
+grub-pc	grub2/kfreebsd_cmdline_default	string	quiet splash	
+# Dispositius d'instaŀlació del GRUB:
+# Choices: 
+grub-pc	grub-pc/install_devices	multiselect
+# Línia d'ordres de kFreeBSD:
+grub-pc	grub2/kfreebsd_cmdline	string	
+# Actualitzar les variables NVRAM per arrancar automàticament Debian?
+grub-pc	grub2/update_nvram	boolean	true
+# for internal use
+grub-pc	grub-pc/kopt_extracted	boolean	false
+# Continue without installing GRUB?
+grub-common	grub-efi/install_devices_empty	boolean	false
+grub-pc	grub-efi/install_devices_empty	boolean	false
+# Voleu continuar sense instaŀlar el GRUB?
+grub-pc	grub-pc/install_devices_empty	boolean	false
+# Skip extra installation to the EFI removable media path?
+grub-pc	grub2/no_efi_extra_removable	boolean	false
+# Línia d'ordres de Linux:
+grub-pc	grub2/linux_cmdline	string	
+# Voleu carregar en cadena des del menu.lst?
+grub-pc	grub-pc/chainload_from_menu.lst	boolean	true
+# Línia d'ordres de Linux per defecte:
+grub-pc	grub2/linux_cmdline_default	string	quiet splash
+# Voleu suprimir el GRUB 2 de /boot/grub?
+grub-pc	grub-pc/postrm_purge_boot_grub	boolean	false
+# Cannot upgrade Secure Boot enforcement policy due to unsigned kernels
+grub-pc	grub2/unsigned_kernels	note
+# Hide the GRUB timeout; for internal use
+grub-pc	grub-pc/hidden_timeout	boolean	true
+# GRUB timeout; for internal use
+grub-pc	grub-pc/timeout	string	0
+# Ha fallat l'escriptura del GRUB al dispositiu. Voleu tornar a provar-ho?
+grub-pc	grub-pc/install_devices_failed_upgrade	boolean	true
+# Ha fallat l'escriptura del GRUB al dispositiu. Voleu continuar?
+# Ha fallat l'escriptura del GRUB al dispositiu. Voleu continuar?
+grub-pc	grub-pc/install_devices_failed	boolean	false
+grub-common	grub-efi/install_devices_failed	boolean	false
+grub-pc	grub-efi/install_devices_failed	boolean	false
+# GRUB EFI system partitions:
+# Choices: 
+grub-common	grub-efi/install_devices	multiselect	
+grub-pc	grub-efi/install_devices	multiselect	
+# Dispositius d'instaŀlació del GRUB:
+# Choices: 
+grub-common	grub-efi/install_devices_disks_changed	multiselect	
+grub-pc	grub-efi/install_devices_disks_changed	multiselect	
+
